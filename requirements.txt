@@ -1,0 +1,6 @@
+Flask==3.0.0
+requests
+PyPDF2
+scikit-learn
+google-search-results
+gunicorn

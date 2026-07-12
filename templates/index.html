@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <title>Resume Matcher</title>
+</head>
+
+<body>
+
+    <div class="animated-background">
+    <div class="floating-shape shape-1"></div>
+    <div class="floating-shape shape-2"></div>
+    <div class="floating-shape shape-3"></div>
+
+</div>
+
+    <div class="container">
+        <h1>Resume Matcher</h1>
+
+        <!-- Input Section -->
+        <section class="input-section">
+            <div class="glass-box">
+                <h2>Submit Your Profile</h2>
+                <form action="/match" method="POST" enctype="multipart/form-data" id="match-form">
+
+                    <div class="file-upload-wrapper">
+                        <label for="pdf_upload" class="custom-file-upload">
+                            <span id="file-name">Select PDF Resume</span>
+                        </label>
+                        <input type="file" name="pdf_upload" id="pdf_upload" accept=".pdf" onchange="updateFileName(this)">
+                    </div>
+
+                    <textarea name="resume" placeholder="Or paste your resume text here..." rows="6"></textarea>
+
+                    <input type="text" name="target_role" class="role-input"
+                           placeholder="What job are you looking for? e.g. Nurse, Graphic Designer, Data Analyst, Marketing Manager...">
+
+                    <textarea name="job_description" placeholder="Paste a specific job description here for a direct match score (optional)..." rows="6"></textarea>
+
+                    <button type="submit" class="submit-btn" id="submit-btn">Run Match Engine</button>
+                </form>
+            </div>
+        </section>
+
+        <!-- Custom Job Description Result -->
+        {% if custom_score is not none %}
+        <section class="glass-box result-box">
+            <h2>Your Match Result</h2>
+            <div class="score-badge
+                {% if custom_score >= 90 %}badge-high
+                {% elif custom_score >= 75 %}badge-medium
+                {% else %}badge-low
+                {% endif %}" style="font-size: 1.1rem; padding: 8px 18px;">
+                {{ custom_score }}% Match
+            </div>
+
+            {% if missing_keywords %}
+            <div class="missing-keywords">
+                <p>Consider adding these keywords from the job description to your resume:</p>
+                <div class="keyword-chips">
+                    {% for word in missing_keywords %}
+                    <span class="chip">{{ word }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </section>
+        {% endif %}
+
+        <!-- Job Results -->
+        {% if jobs_source == 'live' %}
+        <p class="jobs-source-note">🟢 Showing live job postings</p>
+        {% else %}
+        <p class="jobs-source-note">⚪ Showing sample jobs (no live matches found — try a different search term)</p>
+        {% endif %}
+
+        <div class="job-grid">
+            {% for job in jobs %}
+            <div class="card-preview">
+                <div class="job-icon-wrap icon-{{ job.category }}">
+                    <img class="job-hover-image" src="{{ job.image }}" alt="" loading="lazy" onerror="this.style.display='none'">
+
+                    {% if job.category == 'tech' %}
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M8 6L2 12L8 18M16 6L22 12L16 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    {% elif job.category == 'data' %}
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M4 20V10M12 20V4M20 20V14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    {% elif job.category == 'design' %}
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/>
+                        <circle cx="12" cy="8" r="1.5" fill="currentColor"/>
+                        <circle cx="16" cy="12" r="1.5" fill="currentColor"/>
+                        <circle cx="9" cy="15" r="1.5" fill="currentColor"/>
+                    </svg>
+                    {% elif job.category == 'marketing' %}
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M3 11L21 4L14 22L11 13L3 11Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    {% elif job.category == 'health' %}
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M3 12H7L9 18L15 6L17 12H21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    {% elif job.category == 'finance' %}
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 2V22M17 6H9.5C8.5 6 7 6.8 7 8.5C7 10.2 8.5 11 9.5 11H14.5C15.5 11 17 11.8 17 13.5C17 15.2 15.5 16 14.5 16H7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    {% else %}
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="3" y="7" width="18" height="13" rx="2" stroke="currentColor" stroke-width="2"/>
+                        <path d="M8 7V5C8 3.9 8.9 3 10 3H14C15.1 3 16 3.9 16 5V7" stroke="currentColor" stroke-width="2"/>
+                    </svg>
+                    {% endif %}
+                </div>
+
+                <h3>{{ job.title }}</h3>
+                <p>Company: {{ job.company }}</p>
+                <div class="score-badge
+                    {% if job.score >= 90 %}badge-high
+                    {% elif job.score >= 75 %}badge-medium
+                    {% else %}badge-low
+                    {% endif %}">
+                    {{ job.score }}% Match
+                </div>
+
+                {% if job.url and job.url != '#' %}
+                <a href="{{ job.url }}" target="_blank" class="view-job-link">View Job →</a>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Paste this right before the very last closing tags of your container -->
+        <section class="future-jobs-section mt-50">
+            <h2 class="section-title">Emerging Tech Careers (2026 - 2030)</h2>
+            <p class="section-subtitle">Discover the roles shaping the next decade of technology.</p>
+            
+            <div class="job-grid">
+                <div class="card-preview future-card">
+                    <div class="glass-icon">🧠</div>
+                    <h3>AI/ML Engineer</h3>
+                    <p>Building predictive models, natural language processing, and integrating generative AI into production.</p>
+                    <div class="score-badge future-badge">Surging Demand</div>
+                </div>
+
+                <div class="card-preview future-card">
+                    <div class="glass-icon">☁️</div>
+                    <h3>Cloud Architect</h3>
+                    <p>Designing multi-cloud platforms and managing scalable digital infrastructure for modern enterprises.</p>
+                    <div class="score-badge future-badge">High Salary Growth</div>
+                </div>
+
+                <div class="card-preview future-card">
+                    <div class="glass-icon">🛡️</div>
+                    <h3>Cybersecurity Engineer</h3>
+                    <p>Protecting networks, ethical hacking, and securing AI-enabled tools against next-generation threats.</p>
+                    <div class="score-badge future-badge">Critical Shortage</div>
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+
+<footer class="app-footer">
+    <p>&copy; 2026 Resume Matcher. Built with passion by Jai Kumbhar. All rights reserved.</p>
+</footer>
+
+</html>
