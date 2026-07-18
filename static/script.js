@@ -21,7 +21,8 @@ document.addEventListener("DOMContentLoaded", function() {
 });
 
 console.log("JavaScript is loaded and ready!");
-// This is for Showing a loading state on the button when the form is submitted
+// This is for Showing a loading state on the button when the form is submitted,
+// plus a full-page overlay since SerpApi calls can take a few seconds.
 const matchForm = document.getElementById('match-form');
 
 if (matchForm) {
@@ -30,6 +31,9 @@ if (matchForm) {
         btn.innerText = "Processing";
         btn.classList.add('loading');
         btn.disabled = true;
+
+        const overlay = document.getElementById('loading-overlay');
+        if (overlay) overlay.classList.add('active');
     });
 }
 
@@ -41,10 +45,11 @@ function updateFileName(input) {
     }
 }
 
-// This section is for Revealing job cards with a fade/slide-up animation as they scroll into view
+// Reveal job cards and other marked sections with a fade/slide-up animation
+// as they scroll into view
 function initScrollReveal() {
-    const cards = document.querySelectorAll('.card-preview');
-    if (!cards.length) return;
+    const elements = document.querySelectorAll('.card-preview, .reveal');
+    if (!elements.length) return;
 
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
@@ -55,7 +60,35 @@ function initScrollReveal() {
         });
     }, { threshold: 0.15 });
 
-    cards.forEach(card => observer.observe(card));
+    elements.forEach(el => observer.observe(el));
 }
 
-document.addEventListener('DOMContentLoaded', initScrollReveal);
+// Animate score badges counting up from 0 to their real value instead of
+// just appearing instantly
+function animateScoreCounts() {
+    const badges = document.querySelectorAll('.count-up-score[data-target]');
+    if (!badges.length) return;
+
+    badges.forEach(badge => {
+        const target = parseInt(badge.dataset.target, 10) || 0;
+        const duration = 900;
+        const steps = 40;
+        const increment = target / steps;
+        const stepTime = duration / steps;
+        let current = 0;
+
+        const timer = setInterval(() => {
+            current += increment;
+            if (current >= target) {
+                current = target;
+                clearInterval(timer);
+            }
+            badge.textContent = `${Math.round(current)}% Match`;
+        }, stepTime);
+    });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    initScrollReveal();
+    animateScoreCounts();
+});

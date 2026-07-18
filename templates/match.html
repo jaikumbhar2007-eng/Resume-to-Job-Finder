@@ -4,6 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
+
+    <meta property="og:title" content="Resume-to-Job Finder">
+    <meta property="og:description" content="Upload your resume and let AI instantly match you with real-time job roles.">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="{{ url_for('static', filename='og-image.png', _external=True) }}">
+    <meta name="twitter:card" content="summary_large_image">
+
     <title>Resume Matcher</title>
 </head>
 
@@ -15,12 +23,37 @@
         <div class="floating-shape shape-3"></div>
     </div>
 
+    <!-- Full-page overlay shown while the match engine is processing -->
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="loading-spinner"></div>
+        <p>Matching your resume against live roles…</p>
+    </div>
+
     <div class="container">
 
         <div class="hero-header fade-in">
             <h1>Welcome to <span class="highlight">Resume-to-Job Finder</span></h1>
             <p>Upload your resume and let AI instantly match you with real-time roles.</p>
         </div>
+
+        <!-- How It Works -->
+        <section class="how-it-works reveal">
+            <div class="step">
+                <div class="step-number">1</div>
+                <h3>Upload</h3>
+                <p>Add your resume as a PDF or paste the text directly.</p>
+            </div>
+            <div class="step">
+                <div class="step-number">2</div>
+                <h3>Match</h3>
+                <p>Our engine compares it against live job postings using TF-IDF similarity.</p>
+            </div>
+            <div class="step">
+                <div class="step-number">3</div>
+                <h3>Improve</h3>
+                <p>See your match score and the exact keywords to add to your resume.</p>
+            </div>
+        </section>
 
         <!-- Input Section -->
         <section class="input-section">
@@ -51,12 +84,12 @@
         {% if custom_score is not none %}
         <section class="glass-box result-box">
             <h2>Your Match Result</h2>
-            <div class="score-badge
+            <div class="score-badge count-up-score
                 {% if custom_score >= 90 %}badge-high
                 {% elif custom_score >= 75 %}badge-medium
                 {% else %}badge-low
-                {% endif %}" style="font-size: 1.1rem; padding: 8px 18px;">
-                {{ custom_score }}% Match
+                {% endif %}" style="font-size: 1.1rem; padding: 8px 18px;" data-target="{{ custom_score }}">
+                0% Match
             </div>
 
             {% if missing_keywords %}
@@ -122,12 +155,12 @@
 
                 <h3>{{ job.title }}</h3>
                 <p>Company: {{ job.company }}</p>
-                <div class="score-badge
+                <div class="score-badge count-up-score
                     {% if job.score >= 90 %}badge-high
                     {% elif job.score >= 75 %}badge-medium
                     {% else %}badge-low
-                    {% endif %}">
-                    {{ job.score }}% Match
+                    {% endif %}" data-target="{{ job.score }}">
+                    0% Match
                 </div>
 
                 {% if job.url and job.url != '#' %}
