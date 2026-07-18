@@ -1,12 +1,37 @@
-console.log("JavaScript is loaded and ready!");
+// Seamless Video Loop Fix
+document.addEventListener("DOMContentLoaded", function() {
+    const video = document.getElementById("bg-video");
 
-// This is for Showing a loading state on the button when the form is submitted
-document.getElementById('match-form').addEventListener('submit', function() {
-    const btn = document.getElementById('submit-btn');
-    btn.innerText = "Processing";
-    btn.classList.add('loading');
-    btn.disabled = true;
+    if (video) {
+        let loopCutoff = null;
+
+        // Figure out the real loop point once we know the video's actual length,
+        // instead of a hardcoded number that breaks if the video file changes.
+        video.addEventListener("loadedmetadata", function() {
+            loopCutoff = Math.max(this.duration - 1.5, 1);
+        });
+
+        video.addEventListener("timeupdate", function() {
+            if (loopCutoff && this.currentTime >= loopCutoff) {
+                this.currentTime = 0;
+                this.play();
+            }
+        });
+    }
 });
+
+console.log("JavaScript is loaded and ready!");
+// This is for Showing a loading state on the button when the form is submitted
+const matchForm = document.getElementById('match-form');
+
+if (matchForm) {
+    matchForm.addEventListener('submit', function() {
+        const btn = document.getElementById('submit-btn');
+        btn.innerText = "Processing";
+        btn.classList.add('loading');
+        btn.disabled = true;
+    });
+}
 
 // Update the file upload label to show the selected file name
 function updateFileName(input) {

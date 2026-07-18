@@ -177,11 +177,17 @@ def add_category_and_image(job):
 
 @app.route('/')
 def home():
-    jobs = [{**add_category_and_image(job), "score": 0} for job in FALLBACK_JOBS]
-    return render_template('index.html', jobs=jobs, custom_score=None, missing_keywords=[])
+    # 1. This now ONLY serves your new landing page with the video background.
+    return render_template('index.html')
 
-@app.route('/match', methods=['POST'])
+@app.route('/match', methods=['GET', 'POST'])
 def match():
+    # 2. If the user just clicked "Start Engine" and is loading the page for the first time:
+    if request.method == 'GET':
+        jobs = [{**add_category_and_image(job), "score": 0} for job in FALLBACK_JOBS]
+        return render_template('match.html', jobs=jobs, custom_score=None, missing_keywords=[], jobs_source="sample")
+
+    # 3. If the user is submitting their resume (POST request):
     resume_text = extract_resume_text(request)
     job_description = request.form.get('job_description', '')
     target_role = request.form.get('target_role', '').strip()
@@ -209,8 +215,10 @@ def match():
         custom_score = calculate_match_score(resume_text, job_description)
         missing_keywords = find_missing_keywords(resume_text, job_description)
 
-    return render_template('index.html', jobs=jobs, custom_score=custom_score, 
+    # Make sure this renders 'match.html', not 'index.html'
+    return render_template('match.html', jobs=jobs, custom_score=custom_score, 
                            missing_keywords=missing_keywords, jobs_source=jobs_source)
 
 if __name__ == '__main__':
     app.run(debug=True)
+    
