@@ -714,10 +714,6 @@ input[type="file"] {
    MOBILE ADJUSTMENTS
    ========================================= */
 @media (max-width: 768px) {
-    .video-bg-wrapper {
-        display: none;
-    }
-
     h1, .hero-header h1 {
         font-size: 2rem;
     }
